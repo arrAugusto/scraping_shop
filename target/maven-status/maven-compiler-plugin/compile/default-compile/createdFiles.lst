@@ -1,0 +1,13 @@
+Utils\DeleteListCategorias.class
+com\mycompany\scrapingrobot\ScrapingRobot.class
+com\mycompany\scrapingrobot\models\URL_prod.class
+Utils\GetDate.class
+com\mycompany\scrapingrobot\models\Categorias.class
+Utils\UniversalIdentifaction.class
+com\mycompany\scrapingrobot\models\Producto.class
+StoredProcedures\Stored.class
+com\mycompany\scrapingrobot\models\Pagina.class
+Mysql\ConnectionDB.class
+com\mycompany\scrapingrobot\models\productosURLs.class
+com\mycompany\scrapingrobot\models\Descriptions.class
+com\mycompany\scrapingrobot\models\Especificaciones.class
