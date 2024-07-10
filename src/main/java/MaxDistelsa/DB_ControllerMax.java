@@ -138,11 +138,13 @@ public class DB_ControllerMax {
                 List<URL_prod> urls_page = peticion.urlDataProduct(pagina.getUrl_page(), div, anchorHTML);
                 for (URL_prod urlProd : urls_page) {
                     try (CallableStatement stmt = conn.prepareCall(stored.STORED_PROCEDURE_INSERT_URL_FOR_PAGE)) {
+                        UniversalIdentifaction uuid = new UniversalIdentifaction();
+
                         // Establecer el parámetro del Stored Procedure
                         stmt.setString(1, urlProd.getUrl());
                         stmt.setString(2, pagina.getUrl_page());
-                        stmt.setString(3, pagina.getUuid_page());
-                        stmt.setString(4, pagina.getUuid_SCRAPING());
+                        stmt.setString(3, uuid.uuidScrap());
+                        stmt.setString(4, pagina.getUuid_page());
                         stmt.setString(5, _fecha);
                         // Ejecutar el Stored Procedure
                         stmt.executeUpdate();
@@ -167,7 +169,7 @@ public class DB_ControllerMax {
         }
     }
 
-    public void saveProduct() {
+    public void saveProduct(String tipo) {
         try {
             Stored stored = new Stored();
             Connection conn = ConnectionDB.getConnection();
@@ -175,7 +177,7 @@ public class DB_ControllerMax {
             DB_ControllerMax runRobot = new DB_ControllerMax();
             String date = getAmerican.getFormatDateAmerican();
             Random random = new Random();
-
+            int status = 0;
             try (CallableStatement stmt = conn.prepareCall(stored.STORED_PROCEDURE_GET_LOG_LECTURA)) {
                 // Establecer el parámetro del Stored Procedure
                 stmt.setString(1, date);
@@ -184,23 +186,40 @@ public class DB_ControllerMax {
                 try (ResultSet resultSet = stmt.executeQuery()) {
                     // Procesar los resultados
                     while (resultSet.next()) {
-
                         String carga_productos = resultSet.getString("carga_productos");
                         System.out.println("carga_productos> " + carga_productos);
 
-                        String UUID_SCRAPING = resultSet.getString("UUID_SCRAPING");
+                        String UUID_SCRAPING = resultSet.getString("UUID_LOTE_REGISTRADO");
                         System.out.println("UUID_SCRAPING> " + UUID_SCRAPING);
 
-                        String number_urls_prod = resultSet.getString("number_urls_prod");
+                        String number_urls_prod = resultSet.getString("number_urls_products");
                         System.out.println("number_urls_prod> " + number_urls_prod);
 
                         int paginado_urls = Integer.parseInt(number_urls_prod);
                         int pagina = 0;
+                        System.out.println("runRobot.getConsultaSegmentadaProd(pagina, UUID_SCRAPING) " + UUID_SCRAPING);
+                        System.out.println("paginado_urls / 100> " + paginado_urls);
+                        if (status == 0) {
+                            try (CallableStatement stmtLog = conn.prepareCall(stored.STORED_PROCEDURE_UPDATE_LOG_CAT_LECTURA_CARGA)) {
+                                stmtLog.setString(1, UUID_SCRAPING);
+                                stmtLog.executeUpdate();
+                                System.out.println("Registro insertado correctamente. "+stored.STORED_PROCEDURE_UPDATE_LOG_CAT_LECTURA_CARGA+"("+UUID_SCRAPING+")");
+                            } catch (SQLException e) {
+                                Logger.getLogger(DB_ControllerMax.class.getName()).log(Level.SEVERE, "Error al ejecutar el Stored Procedure", e);
+                            }
+                        }
+                        status = 1;
+
                         for (int i = 0; i < (paginado_urls / 100); i++) {
 
                             System.out.println("pagina> " + pagina);
                             List<Pagina> listPagina = runRobot.getConsultaSegmentadaProd(pagina, UUID_SCRAPING);
-                            runRobot.saveProduction(listPagina);
+                            if (tipo.equals("WAY")) {
+                                runRobot.saveProductionWAY(listPagina);
+                            } else {
+                                runRobot.saveProduction(listPagina);
+                            }
+
                             pagina += 100;
 
                             // Esperar un intervalo aleatorio entre 2 y 3 segundos
@@ -210,6 +229,7 @@ public class DB_ControllerMax {
                         // Imprimir los resultados
                         System.out.println("carga_productos>> " + carga_productos);
                         System.out.println("UUID_SCRAPING> " + UUID_SCRAPING);
+
                     }
                 }
             }
@@ -223,11 +243,83 @@ public class DB_ControllerMax {
 
     }
 
-    public List<Pagina> getConsultaSegmentadaProd(int pagina, String UUID_SCRAPING) {
-        List<Pagina> listPage = new ArrayList<>();
+    public void saveProductionWAY(List<Pagina> listPagina) {
+        Stored stored = new Stored();
+        GetProductoWAY getProd = new GetProductoWAY();
+        GetDate getDate = new GetDate();
+        String _fecha = getDate.getFormatDate();
+        UniversalIdentifaction uuid = new UniversalIdentifaction();
+        DB_ControllerMax save = new DB_ControllerMax();
+
+        Connection conn = null;
+        CallableStatement stmt = null;
 
         try {
+            if (listPagina.size() < 1) {
+                System.out.println("No se pueden insertar valores vacios");
+                return;
+            }
+            conn = ConnectionDB.getConnection();
 
+            for (Pagina pagina : listPagina) {
+                Producto producto = getProd.getAllDataWAY(pagina.getUrl_page());
+                String UUID_PRODUCTO = uuid.uuidScrap();
+
+                try {
+                    stmt = conn.prepareCall(stored.STORED_PROCEDURE_INSERT_PRODUCTO_READ);
+                    // Establecer el parámetro del Stored Procedure
+                    stmt.setString(1, producto.getUrl_img_prod());
+                    stmt.setString(2, producto.getUrl_marca());
+                    stmt.setString(3, producto.getTag_name());
+                    stmt.setString(4, producto.getSkuValue());
+                    stmt.setString(5, producto.getSku());
+                    stmt.setString(6, producto.getDisponibilidad());
+                    stmt.setDouble(7, producto.getPrice());
+                    stmt.setDouble(8, producto.getPriceOld());
+                    stmt.setDouble(9, 0.00);
+                    stmt.setString(10, _fecha);
+                    stmt.setString(11, pagina.getUuid_page());
+                    stmt.setString(12, pagina.getUuid_SCRAPING());
+                    stmt.setString(13, UUID_PRODUCTO);
+                    stmt.setString(14, pagina.getUrl_page());
+
+                    // Ejecutar el Stored Procedure
+                    stmt.executeUpdate();
+                    System.out.println("------------------------------------------------------------------------------------------------");
+                    save.saveDescription(UUID_PRODUCTO, producto.getDescriptions());
+                    save.saveEspecificacion(UUID_PRODUCTO, producto.getEspecificaciones());
+
+                } catch (SQLException e) {
+                    // Manejar excepciones SQL
+                    e.printStackTrace();
+                } finally {
+                    if (stmt != null) {
+                        try {
+                            stmt.close();
+                        } catch (SQLException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            }
+
+        } catch (SQLException ex) {
+            Logger.getLogger(DB_ControllerMax.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+            if (conn != null) {
+                try {
+                    conn.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    public List<Pagina> getConsultaSegmentadaProd(int pagina, String UUID_SCRAPING) {
+        System.out.println("UUID_SCRAPING> " + UUID_SCRAPING);
+        List<Pagina> listPage = new ArrayList<>();
+        try {
             Stored stored = new Stored();
             Connection conn = ConnectionDB.getConnection();
             try (CallableStatement stmt = conn.prepareCall(stored.STORED_PROCEDURE_GET_URLS_PRODUCTS)) {
@@ -241,8 +333,8 @@ public class DB_ControllerMax {
                     while (rs.next()) {
                         Pagina page = new Pagina();
                         page.setUrl_page(rs.getString("urls_for_page"));
-                        page.setUuid_page(rs.getString("UUID"));
-                        page.setUuid_SCRAPING(rs.getString("UUID_SCRAPING"));
+                        page.setUuid_page(rs.getString("PK_UUID_FOR_PAGE"));
+                        page.setUuid_SCRAPING(rs.getString("FK_UUID_PAGINA"));
                         listPage.add(page);
                     }
                 }
@@ -294,7 +386,7 @@ public class DB_ControllerMax {
 
                     // Ejecutar el Stored Procedure
                     stmt.executeUpdate();
-                    System.out.println("Registro insertado correctamente.");
+                    System.out.println("Registro insertado correctamente. "+stored.STORED_PROCEDURE_INSERT_PRODUCTO_READ+" >> "+stmt.toString());
                     save.saveDescription(UUID_PRODUCTO, producto.getDescriptions());
                     save.saveEspecificacion(UUID_PRODUCTO, producto.getEspecificaciones());
 
@@ -396,7 +488,7 @@ public class DB_ControllerMax {
 
                     // Ejecutar el Stored Procedure
                     stmt.executeUpdate();
-                    System.out.println("Registro insertado correctamente.");
+                    System.out.println("Registro insertado correctamente. "+stored.STORED_PROCEDURE_INSERT_ESPECIFICACIONES+" >> "+stmt.toString());
 
                 } catch (SQLException e) {
                     // Manejar excepciones SQL

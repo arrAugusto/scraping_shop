@@ -133,7 +133,6 @@ public class GetCategoriasMax {
             if (productItems != null) {
                 // Seleccionar todos los elementos con la clase 'block-item__thumb' dentro de 'wrap-products'
                 Elements anchors = productItems.select(anchorHTML);
-                System.out.println(anchors);
                 // Imprimir las URLs encontradas
                 System.out.println("URLs de productos encontrados:");
                 for (Element anchor : anchors) {

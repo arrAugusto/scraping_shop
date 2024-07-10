@@ -28,4 +28,8 @@ public class Stored {
 
     public static final String STORED_PROCEDURE_INSERT_ESPECIFICACIONES = "{ CALL INSERT_ESPECIFICACIONES(?,?,?) }";
 
+    public static final String STORED_PROCEDURE_INSERT_LOG_CAT_LECTURA = "{ CALL INSERT_LOG_CAT_LECTURA(?,?)}";
+    
+    public static final String STORED_PROCEDURE_UPDATE_LOG_CAT_LECTURA_CARGA = "{ CALL UPDATE_LOG_CAT_LECTURA_CARGA(?)}";
+    
 }

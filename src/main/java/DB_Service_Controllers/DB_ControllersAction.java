@@ -42,7 +42,16 @@ public class DB_ControllersAction {
                 String UUID_CATEGORIA = uuid.uuidScrap();
 
                 System.out.println(categorias.get(i).getNombreProducto() + " " + categorias.get(i).getUrlProducto());
-
+                if (i == 0) {
+                    try (CallableStatement stmtLog = conn.prepareCall(stored.STORED_PROCEDURE_INSERT_LOG_CAT_LECTURA)) {
+                        stmtLog.setString(1, UUID_PAGINA);
+                        stmtLog.setString(2, "1");
+                        stmtLog.executeUpdate();
+                        System.out.println("Registro insertado correctamente.");
+                    } catch (SQLException e) {
+                        Logger.getLogger(DB_ControllerMax.class.getName()).log(Level.SEVERE, "Error al ejecutar el Stored Procedure", e);
+                    }
+                }
                 // Preparar el Stored Procedure
                 try (CallableStatement stmt = conn.prepareCall(stored.STORED_PROCEDURE_INSERT_LECTURA_CATEGORIAS)) {
                     // Establecer el parámetro del Stored Procedure
@@ -56,7 +65,7 @@ public class DB_ControllersAction {
 
                     // Ejecutar el Stored Procedure
                     stmt.executeUpdate();
-                    System.out.println("Registro insertado correctamente.");
+                    System.out.println("Registro insertado correctamente. " +stored.STORED_PROCEDURE_INSERT_LECTURA_CATEGORIAS+" >> "+ stmt.toString());
 
                     scrap.lectura_of_page(categorias.get(i).getUrlProducto(), div, UUID_CATEGORIA);
 
@@ -103,7 +112,7 @@ public class DB_ControllersAction {
 
                         // Ejecutar el Stored Procedure
                         stmt.executeUpdate();
-                        System.out.println("Registro insertado correctamente.");
+                        System.out.println("Registro insertado correctamente. "+stored.STORED_PROCEDURE_INSERT_URLS_PAGINADAS+" >> "+stmt.toString());
 
                     } catch (SQLException e) {
                         // Manejar excepciones SQL
