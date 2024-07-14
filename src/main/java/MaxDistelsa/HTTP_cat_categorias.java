@@ -4,6 +4,7 @@
  */
 package MaxDistelsa;
 
+import MaxDistelsa.AgenciasWay.GetCategoriasMax;
 import com.mycompany.scrapingrobot.models.productosURLs;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -32,9 +33,9 @@ public class HTTP_cat_categorias {
             firstGetURLprod.setUrlProducto(url);
             pages.add(firstGetURLprod);
             boolean statusPage = false;
-            // Hacer una solicitud HTTP a la página web
+            // Hacer una solicitud HTTP a la Pagina web
             do {
-                // Aquí puedes agregar cualquier operación que necesites realizar dentro del bucle
+                // Aqui puedes agregar cualquier operación que necesites realizar dentro del bucle
                 HTTP_cat_categorias getURLprod = new HTTP_cat_categorias();
                 productosURLs urlAndProd = getURLprod.getURLsPages(url, div);
                 if (urlAndProd == null || urlAndProd.getUrlProducto() == null || urlAndProd.getUrlProducto().isEmpty()) {
@@ -43,8 +44,8 @@ public class HTTP_cat_categorias {
                 }
                 url = urlAndProd.getUrlProducto();
                 pages.add(urlAndProd);
-                // Puedes actualizar urlAndProd o realizar otras acciones aquí
-            } while (!statusPage); // Condición del bucle
+                // Puedes actualizar urlAndProd o realizar otras acciones aqu��
+            } while (!statusPage); // Condici�n del bucle
 
         } catch (Exception e) {
             System.out.println("Error: " + e.getMessage());
@@ -57,7 +58,7 @@ public class HTTP_cat_categorias {
         productosURLs prod = new productosURLs();
 
         try {
-            // Establecer un tiempo de espera de 10 segundos para la conexión y la lectura
+            // Establecer un tiempo de espera de 10 segundos para la conexi�n y la lectura
             Document doc = Jsoup.connect(url)
                     .timeout(10000) // 10 segundos en milisegundos
                     .get();
@@ -79,11 +80,10 @@ public class HTTP_cat_categorias {
                     String text = anchor.text();
                     String href = anchor.attr("href");
 
-                    // Verificar si el texto del <a> es 'Página siguiente »'
+                    // Verificar si el texto del <a> es Pagina siguiente
                     if (text.trim().toUpperCase().contains("SIGUIENTE")) {
                         // Imprimir el texto y el href del <a>
                         if (!href.isEmpty()) {
-                            System.out.println("text> " + text + " " + href);
                             prod.setNombreProducto(text);
                             prod.setUrlProducto(href);
 
@@ -94,7 +94,7 @@ public class HTTP_cat_categorias {
         } catch (IOException ex) {
             Logger.getLogger(GetCategoriasMax.class.getName()).log(Level.SEVERE, "Error al conectar con la URL o leer el documento.", ex);
         } catch (Exception ex) {
-            Logger.getLogger(GetCategoriasMax.class.getName()).log(Level.SEVERE, "Ocurrió un error inesperado.", ex);
+            Logger.getLogger(GetCategoriasMax.class.getName()).log(Level.SEVERE, "Ocurrio un error inesperado.", ex);
         }
 
         return prod;

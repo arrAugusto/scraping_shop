@@ -60,7 +60,7 @@ public class GetProductoMax {
                     double priceValue = Double.parseDouble(price.replaceAll("[^\\d.]", ""));
                     producto.setPrice(priceValue);
                 } catch (Exception e) {
-                    System.out.println("No se encontr贸 precio actual: " + e.getMessage());
+                    System.out.println("No se encontrados precio actual: " + e.getMessage());
                     producto.setPrice(0.00);
                 }
 
@@ -70,15 +70,15 @@ public class GetProductoMax {
                     double priceOldValue = Double.parseDouble(priceOld.replaceAll("[^\\d.]", ""));
                     producto.setPriceOld(priceOldValue);
                 } catch (Exception e) {
-                    System.out.println("No se encontr贸 precio antiguo: " + e.getMessage());
+                    System.out.println("No se encontrados precio antiguo: " + e.getMessage());
                     producto.setPriceOld(0.00);
                 }
 
                 try {
-                    // Establece la descripci贸n del producto
+                    // Establece la Descripci髇 del producto
                     producto.setDescriptions(getProd.getProductAttributes(doc));
                 } catch (Exception ex) {
-                    System.out.println("Error al obtener la descripci贸n del producto: " + ex.getMessage());
+                    System.out.println("Error al obtener la Descripci髇 del producto: " + ex.getMessage());
                 }
 
                 try {
@@ -107,10 +107,10 @@ public class GetProductoMax {
                 System.out.println("Texto del span: " + spanText);
                 return spanText;
             } else {
-                System.out.println("No se encontr贸 el span dentro del div.");
+                System.out.println("No se encontrados el span dentro del div.");
             }
         } else {
-            System.out.println("No se encontr贸 el div con la clase 'page-title-wrapper product'.");
+            System.out.println("No se encontrados el div con la clase 'page-title-wrapper product'.");
         }
         return "";
     }
@@ -134,13 +134,13 @@ public class GetProductoMax {
                     System.out.println("URL de la imagen en 'content-free': " + imgUrl);
                     return imgUrl;
                 } else {
-                    System.out.println("No se encontr贸 una imagen dentro del div 'content-free'.");
+                    System.out.println("No se encontrados una imagen dentro del div 'content-free'.");
                 }
             } else {
-                System.out.println("El div con la clase 'content-free' no se encontr贸.");
+                System.out.println("El div con la clase 'content-free' no se encontrados.");
             }
         } else {
-            System.out.println("El div con la clase 'product-info-main' no se encontr贸.");
+            System.out.println("El div con la clase 'product-info-main' no se encontrados.");
         }
         return "";
     }
@@ -158,10 +158,10 @@ public class GetProductoMax {
                 System.out.println("Texto del div con la clase 'value': " + valueText);
                 return valueText;
             } else {
-                System.out.println("No se encontr贸 el div con la clase 'value' dentro del div.");
+                System.out.println("No se encontrados el div con la clase 'value' dentro del div.");
             }
         } else {
-            System.out.println("No se encontr贸 el div con la clase 'page-title-wrapper product'.");
+            System.out.println("No se encontrados el div con la clase 'page-title-wrapper product'.");
         }
         return "";
     }
@@ -183,14 +183,14 @@ public class GetProductoMax {
                     System.out.println("Disponibilidad: " + disponibilidad);
                     return disponibilidad;
                 } else {
-                    System.out.println("No se encontr贸 el p dentro del div con la clase 'value'.");
+                    System.out.println("No se encontrados el p dentro del div con la clase 'value'.");
                 }
 
             } else {
-                System.out.println("No se encontr贸 el div con la clase 'value' dentro del div.");
+                System.out.println("No se encontrados el div con la clase 'value' dentro del div.");
             }
         } else {
-            System.out.println("No se encontr贸 el div con la clase 'page-title-wrapper product'.");
+            System.out.println("No se encontrados el div con la clase 'page-title-wrapper product'.");
         }
         return "";
     }
@@ -208,10 +208,10 @@ public class GetProductoMax {
                 System.out.println("disponiblidad 'value': " + valueText);
                 return valueText;
             } else {
-                System.out.println("No se encontr贸 el div con la clase 'value' dentro del div.");
+                System.out.println("No se encontrados el div con la clase 'value' dentro del div.");
             }
         } else {
-            System.out.println("No se encontr贸 el div con la clase 'page-title-wrapper product'.");
+            System.out.println("No se encontrados el div con la clase 'page-title-wrapper product'.");
         }
         return "";
     }
@@ -229,10 +229,10 @@ public class GetProductoMax {
                 System.out.println("Precio: " + priceText);
                 return priceText;
             } else {
-                System.out.println("No se encontr贸 el span con la clase 'price' dentro del div.");
+                System.out.println("No se encontrados el span con la clase 'price' dentro del div.");
             }
         } else {
-            System.out.println("No se encontr贸 el div con la clase 'price-box price-final_price'.");
+            System.out.println("No se encontrados el div con la clase 'price-box price-final_price'.");
         }
         return "";
     }
@@ -250,10 +250,10 @@ public class GetProductoMax {
                 System.out.println("old-price: " + priceText);
                 return priceText;
             } else {
-                System.out.println("No se encontr贸 el span con la clase 'price' dentro del div.");
+                System.out.println("No se encontrados el span con la clase 'price' dentro del div.");
             }
         } else {
-            System.out.println("No se encontr贸 el div con la clase 'price-box price-final_price'.");
+            System.out.println("No se encontrados el div con la clase 'price-box price-final_price'.");
         }
         return "";
     }
@@ -285,17 +285,17 @@ public class GetProductoMax {
                     // Obtener el texto del p
                     String description = pElement.text();
                     Descriptions descripP = new Descriptions();
-                    System.out.println("Descripci贸n: " + description);
+                    System.out.println("Descripci髇: " + description);
                     descripP.setDescripcion(description);
                     attributes.add(descripP);
 
                 } else {
-                    System.out.println("No se encontr贸 el p dentro del div con la clase 'value'.");
+                    System.out.println("No se encontrados el p dentro del div con la clase 'value'.");
                 }
             }
 
         } else {
-            System.out.println("No se encontr贸 el div con la clase 'product attribute overview'.");
+            System.out.println("No se encontrados el div con la clase 'product attribute overview'.");
         }
 
         return attributes;
@@ -316,7 +316,7 @@ public class GetProductoMax {
                 Elements rows = table.select("tr");
                 for (Element row : rows) {
                     Especificaciones espeficicacion = new Especificaciones();
-                    // Obtener el th (tipo) y el td (descripci贸n) en cada fila
+                    // Obtener el th (tipo) y el td (Descripci髇) en cada fila
                     Element th = row.selectFirst("th");
                     Element td = row.selectFirst("td");
                     if (th != null && td != null) {
@@ -326,14 +326,14 @@ public class GetProductoMax {
                         espeficicacion.setDescripcion(description);
 
                         attributes.add(espeficicacion);
-                        System.out.println("Tipo: " + type + ", Descripci贸n: " + description);
+                        System.out.println("Tipo: " + type + ", Descripci髇: " + description);
                     }
                 }
             } else {
-                System.out.println("No se encontr贸 la tabla con la clase 'data table additional-attributes'.");
+                System.out.println("No se encontrados la tabla con la clase 'data table additional-attributes'.");
             }
         } else {
-            System.out.println("No se encontr贸 el div con la clase 'additional-attributes-wrapper table-wrapper'.");
+            System.out.println("No se encontrados el div con la clase 'additional-attributes-wrapper table-wrapper'.");
         }
 
         return attributes;
@@ -352,10 +352,10 @@ public class GetProductoMax {
                 System.out.println("URL de la imagen: " + imgUrl);
                 return imgUrl;
             } else {
-                System.out.println("No se encontr贸 la imagen dentro del div con la clase 'gallery-placeholder'.");
+                System.out.println("No se encontrados la imagen dentro del div con la clase 'gallery-placeholder'.");
             }
         } else {
-            System.out.println("No se encontr贸 el div con la clase 'gallery-placeholder'.");
+            System.out.println("No se encontrados el div con la clase 'gallery-placeholder'.");
         }
         return "";
     }

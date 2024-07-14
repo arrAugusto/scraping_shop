@@ -58,7 +58,7 @@ public class GetProductoWAY {
                     double priceValue = Double.parseDouble(price.replaceAll("[^\\d.]", ""));
                     producto.setPrice(priceValue);
                 } catch (Exception e) {
-                    System.out.println("No se encontr贸 precio actual: " + e.getMessage());
+                    System.out.println("No se encontrados precio actual: " + e.getMessage());
                     producto.setPrice(0.00);
                 }
 
@@ -68,15 +68,15 @@ public class GetProductoWAY {
                     double priceOldValue = Double.parseDouble(priceOld.replaceAll("[^\\d.]", ""));
                     producto.setPriceOld(priceOldValue);
                 } catch (Exception e) {
-                    System.out.println("No se encontr贸 precio antiguo: " + e.getMessage());
+                    System.out.println("No se encontrados precio antiguo: " + e.getMessage());
                     producto.setPriceOld(0.00);
                 }
 
                 try {
-                    // Establece la descripci贸n del producto
+                    // Establece la Descripci髇 del producto
                     producto.setDescriptions(getProd.getProductAttributes(doc));
                 } catch (Exception ex) {
-                    System.out.println("Error al obtener la descripci贸n del producto: " + ex.getMessage());
+                    System.out.println("Error al obtener la Descripci髇 del producto: " + ex.getMessage());
                 }
             }
         } catch (Exception ex) {
@@ -98,10 +98,10 @@ public class GetProductoWAY {
                 System.out.println("Texto del h1: " + spanText);
                 return spanText;
             } else {
-                System.out.println("No se encontr贸 el span dentro del div.");
+                System.out.println("No se encontrados el span dentro del div.");
             }
         } else {
-            System.out.println("No se encontr贸 el div con la clase 'page-title-wrapper product'.");
+            System.out.println("No se encontrados el div con la clase 'page-title-wrapper product'.");
         }
         return "";
     }
@@ -122,13 +122,13 @@ public class GetProductoWAY {
                     System.out.println("URL de la imagen en 'noscript': " + imgUrl);
                     return imgUrl;
                 } else {
-                    System.out.println("No se encontr贸 una imagen dentro del noscript.");
+                    System.out.println("No se encontrados una imagen dentro del noscript.");
                 }
             } else {
-                System.out.println("No se encontr贸 el elemento noscript dentro del div 'text-center'.");
+                System.out.println("No se encontrados el elemento noscript dentro del div 'text-center'.");
             }
         } else {
-            System.out.println("El div con la clase 'text-center' no se encontr贸.");
+            System.out.println("El div con la clase 'text-center' no se encontrados.");
         }
         return "";
     }
@@ -145,10 +145,10 @@ public class GetProductoWAY {
                 System.out.println("Texto del div con la clase 'value': " + valueText);
                 return valueText;
             } else {
-                System.out.println("No se encontr贸 el div con la clase 'value' dentro del div.");
+                System.out.println("No se encontrados el div con la clase 'value' dentro del div.");
             }
         } else {
-            System.out.println("No se encontr贸 el div con la clase 'page-title-wrapper product'.");
+            System.out.println("No se encontrados el div con la clase 'page-title-wrapper product'.");
         }
         return "";
     }
@@ -166,10 +166,10 @@ public class GetProductoWAY {
                 System.out.println("Precio: " + priceText);
                 return priceText;
             } else {
-                System.out.println("No se encontr贸 el span con la clase 'price' dentro del div.");
+                System.out.println("No se encontrados el span con la clase 'price' dentro del div.");
             }
         } else {
-            System.out.println("No se encontr贸 el div con la clase 'price-box price-final_price'.");
+            System.out.println("No se encontrados el div con la clase 'price-box price-final_price'.");
         }
         return "";
     }
@@ -187,10 +187,10 @@ public class GetProductoWAY {
                 System.out.println("old-price: " + priceText);
                 return priceText;
             } else {
-                System.out.println("No se encontr贸 el span con la clase 'price' dentro del div.");
+                System.out.println("No se encontrados el span con la clase 'price' dentro del div.");
             }
         } else {
-            System.out.println("No se encontr贸 el div con la clase 'price-box price-final_price'.");
+            System.out.println("No se encontrados el div con la clase 'price-box price-final_price'.");
         }
         return "";
     }
@@ -222,17 +222,17 @@ public class GetProductoWAY {
                     // Obtener el texto del p
                     String description = pElement.text();
                     Descriptions descripP = new Descriptions();
-                    System.out.println("Descripci贸n: " + description);
+                    System.out.println("Descripci髇: " + description);
                     descripP.setDescripcion(description);
                     attributes.add(descripP);
 
                 } else {
-                    System.out.println("No se encontr贸 el p dentro del div con la clase 'value'.");
+                    System.out.println("No se encontrados el p dentro del div con la clase 'value'.");
                 }
             }
 
         } else {
-            System.out.println("No se encontr贸 el div con la clase 'product attribute overview'.");
+            System.out.println("No se encontrados el div con la clase 'product attribute overview'.");
         }
 
         return attributes;
@@ -249,10 +249,10 @@ public class GetProductoWAY {
                 String imageUrl = firstImage.attr("src");
                 return imageUrl;
             } else {
-                System.out.println("No se encontr贸 la primera imagen dentro del div 'flex-viewport'.");
+                System.out.println("No se encontrados la primera imagen dentro del div 'flex-viewport'.");
             }
         } else {
-            System.out.println("El div con la clase 'flex-viewport' no se encontr贸.");
+            System.out.println("El div con la clase 'flex-viewport' no se encontrados.");
         }
         return "";
     }

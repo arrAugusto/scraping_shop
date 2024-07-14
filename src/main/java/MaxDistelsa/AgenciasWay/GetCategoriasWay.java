@@ -20,7 +20,6 @@ public class GetCategoriasWay {
 
     public List<productosURLs> getCategoria(String UrlBase) {
         List<productosURLs> listURLS = new ArrayList<>();
-
         try {
             // Conectar a la URL con un timeout de 10 segundos
             Document doc = Jsoup.connect(UrlBase)
@@ -28,7 +27,7 @@ public class GetCategoriasWay {
                     .get();
 
             // Seleccionar el div con la clase wrap-categories
-            Element wrapCategories = doc.selectFirst("div.wrap-categories");
+            Element wrapCategories = doc.selectFirst("div.section-item-content");
 
             if (wrapCategories != null) {
                 // Seleccionar todos los elementos anchor dentro del div
@@ -39,18 +38,27 @@ public class GetCategoriasWay {
                     productosURLs urlsPet = new productosURLs();
 
                     String href = anchor.attr("href");
-                    String text = anchor.text();
+                    try {
+                        String categoria = anchor.selectFirst("span") != null ? anchor.selectFirst("span").text() : "";
+                        urlsPet.setCategoria(categoria);
+                    } catch (Exception e) {
+                        System.out.println("No existe el span categoria en esta pagina");
+                    }
+                    // Obtener el texto del span dentro del anchor
 
-                    urlsPet.setNombreProducto(text);
-                    urlsPet.setUrlProducto(href);
-                    listURLS.add(urlsPet);
+                    String text = anchor.text();
+                    if (href.contains("http")) {
+                        urlsPet.setNombreProducto(text);
+                        urlsPet.setUrlProducto(href);
+                        listURLS.add(urlsPet);
+                    }
 
                 }
             } else {
-                System.out.println("No se encontr√≥ el div con la clase wrap-categories.");
+                System.out.println("No se encontrÛ el div con la clase section-item-content.");
             }
         } catch (Exception e) {
-            System.out.println("Ocurri√≥ un error al intentar conectar o procesar la p√°gina.");
+            System.out.println("OcurriÛ un error al intentar conectar o procesar la p·gina.");
             e.printStackTrace();
         }
         return listURLS;

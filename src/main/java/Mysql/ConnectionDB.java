@@ -18,7 +18,7 @@ public class ConnectionDB {
     private static final String USER = "root"; // Nombre de usuario
     private static final String PASSWORD = ""; // Contraseña
 
-    // Método para obtener una conexión a la base de datos
+    // Método para obtener una conexi�n a la base de datos
     public static Connection getConnection() throws SQLException {
         return DriverManager.getConnection(URL, USER, PASSWORD);
     }

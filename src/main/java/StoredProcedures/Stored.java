@@ -10,7 +10,7 @@ package StoredProcedures;
  */
 public class Stored {
 
-    public static final String STORED_PROCEDURE_INSERT_LECTURA_CATEGORIAS = "{ CALL INSERT_LECTURA_CATEGORIAS(?,?,?,?,?,?,?) }";
+    public static final String STORED_PROCEDURE_INSERT_LECTURA_CATEGORIAS = "{ CALL INSERT_LECTURA_CATEGORIAS(?,?,?,?,?,?,?,?) }";
 
     public static final String STORED_PROCEDURE_INSERT_URLS_PAGINADAS = "{ CALL INSERT_URLS_PAGINADAS(?,?,?,?) }";
 

@@ -1,4 +1,4 @@
-package MaxDistelsa;
+package MaxDistelsa.AgenciasWay;
 
 import com.mycompany.scrapingrobot.ScrapingRobot;
 import com.mycompany.scrapingrobot.models.Categorias;
@@ -29,21 +29,21 @@ public class GetCategoriasMax {
     public List<Categorias> Categorias(String URLBase) {
         List<Categorias> catArray = new ArrayList<>();
         try {
-            // Definir el array con las categor√≠as
+            // Definir el array con las categorÌas
             List<String> categories = Arrays.asList(
                     "Productos",
                     "Marcas",
                     "Celulares",
                     "Tv y Video",
-                    "Electr√≥nicos",
+                    "ElectrÛnicos",
                     "Hogar",
                     "Rastrear pedido"
             );
-            // Hacer una solicitud HTTP a la p√°gina web
+            // Hacer una solicitud HTTP a la p·gina web
             String url = URLBase;
             Document doc = Jsoup.connect(url).get();
 
-            // Seleccionar elementos <a> que contienen una de las clases espec√≠ficas
+            // Seleccionar elementos <a> que contienen una de las clases especÌficas
             Elements anchors = doc.select("a.level-top, a.mostrar, a.ui-corner-all, a.ui-menu-item-wrapper");
 
             // Iterar sobre cada elemento <a> encontrado
@@ -51,11 +51,11 @@ public class GetCategoriasMax {
                 // Seleccionar los <span> dentro del <a>
                 Elements spans = anchor.select("span");
 
-                // Iterar sobre cada <span> y verificar si su texto est√° en las categor√≠as
+                // Iterar sobre cada <span> y verificar si su texto est· en las categorÌas
                 for (Element span : spans) {
                     String spanText = span.text().trim(); // Obtener y recortar el texto del <span>
 
-                    // Verificar si el texto del <span> est√° en la lista de categor√≠as
+                    // Verificar si el texto del <span> est· en la lista de categorÌas
                     if (categories.contains(spanText)) {
                         Categorias cat = new Categorias();
 
@@ -80,7 +80,7 @@ public class GetCategoriasMax {
         List<productosURLs> listProduct = new ArrayList<>();
 
         try {
-            // Hacer una solicitud HTTP a la p√°gina web
+            // Hacer una solicitud HTTP a la p·gina web
             String url = "https://www.max.com.gt/";
             Document doc = Jsoup.connect(url).get();
 
@@ -91,8 +91,8 @@ public class GetCategoriasMax {
                 // Seleccionar todos los elementos <li> dentro del elemento con la clase 'gutters'
                 Elements listItems = gutters.select("li");
 
-                // Imprimir solo las categor√≠as encontradas y sus URLs
-                System.out.println("sub Categor√≠as encontradas y URLs:");
+                // Imprimir solo las categorÌas encontradas y sus URLs
+                System.out.println("sub CategorÌas encontradas y URLs:");
                 for (Element li : listItems) {
                     // Buscar elementos <a> dentro del <li> y extraer los valores href
                     Elements anchors = li.select("a[href]");
@@ -113,7 +113,7 @@ public class GetCategoriasMax {
                     }
                 }
             } else {
-                System.out.println("No se encontr√≥ el elemento con la clase 'gutters'.");
+                System.out.println("No se encontrÛ el elemento con la clase 'gutters'.");
             }
         } catch (Exception e) {
             System.out.println("Error: " + e.getMessage());
@@ -151,10 +151,10 @@ public class GetCategoriasMax {
                     }
                 }
             } else {
-                System.out.println("No se encontr√≥ el contenedor con la clase 'wrap-products'.");
+                System.out.println("No se encontrÛ el contenedor con la clase 'wrap-products'.");
             }
         } catch (java.net.SocketTimeoutException e) {
-            System.out.println("Error: La conexi√≥n ha superado el tiempo de espera de 10 segundos.");
+            System.out.println("Error: La conexiÛn ha superado el tiempo de espera de 10 segundos.");
         } catch (Exception e) {
             System.out.println("Error: " + e.getMessage());
             e.printStackTrace();

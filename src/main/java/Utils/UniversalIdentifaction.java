@@ -18,9 +18,7 @@ public class UniversalIdentifaction {
 
         // Convertir a cadena de texto
         String uuidString = uuid.toString();
-
-        // Mostrar el UUID generado
-        System.out.println("UUID generado: " + uuidString);
+        //retornar respuesta
         return uuidString;
     }
 }

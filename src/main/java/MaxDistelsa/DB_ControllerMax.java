@@ -4,7 +4,7 @@
  */
 package MaxDistelsa;
 
-import MaxDistelsa.GetCategoriasMax;
+import MaxDistelsa.AgenciasWay.GetCategoriasMax;
 import MaxDistelsa.GetProductoMax;
 import Mysql.ConnectionDB;
 import StoredProcedures.Stored;
@@ -23,7 +23,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
+import java.util.concurrent.ExecutorService;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -45,7 +45,7 @@ public class DB_ControllerMax {
             DB_ControllerMax runRobot = new DB_ControllerMax();
             String date = getAmerican.getFormatDateAmerican();
             try (CallableStatement stmt = conn.prepareCall(stored.STORED_PROCEDURE_GET_LOG_LECTURA)) {
-                // Establecer el parámetro del Stored Procedure
+                // Establecer el parametro del Stored Procedure
                 stmt.setString(1, date);
 
                 // Ejecutar el procedimiento almacenado
@@ -56,27 +56,16 @@ public class DB_ControllerMax {
                         String carga_productos = resultSet.getString("carga_productos");
                         String number_pages = resultSet.getString("number_pages");
 
-                        // Imprimir los resultados
-                        System.out.println("carga_productos>> " + carga_productos);
-                        System.out.println("number_pages> " + number_pages);
-
                         if (carga_productos.equals("0")) {
                             int pagina = 0;
                             int numerPages = Integer.parseInt(number_pages);
                             int paginado = (numerPages / 100);
                             System.out.println("paginado> " + paginado);
-                            if (paginado > 100) {
-                                for (int i = 0; i < paginado; i++) {
-                                    System.out.println("pagina:: " + i + 1);
-                                    List<Pagina> getConsulta = runRobot.getConsultaSegmentada(pagina);
-                                    runRobot.saveURLForPage(getConsulta, div, anchorHTML);
-                                    pagina += 100;
-                                }
-                            } else {
-                                System.out.println("pagina:: " + pagina + 1);
+                            for (int i = 0; i < paginado; i++) {
+                                System.out.println("pagina:: " + i + 1);
                                 List<Pagina> getConsulta = runRobot.getConsultaSegmentada(pagina);
-                                System.out.println(getConsulta.toString());
                                 runRobot.saveURLForPage(getConsulta, div, anchorHTML);
+                                pagina += 100;
                             }
                         }
 
@@ -93,33 +82,59 @@ public class DB_ControllerMax {
 
     public List<Pagina> getConsultaSegmentada(int pagina) {
         List<Pagina> listPage = new ArrayList<>();
+        Connection conn = null;
+        CallableStatement stmt = null;
+        ResultSet rs = null;
 
         try {
-
             Stored stored = new Stored();
-            Connection conn = ConnectionDB.getConnection();
-            try (CallableStatement stmt = conn.prepareCall(stored.STORED_PROCEDURE_GET_PAGINAS_LECTURA)) {
-                // Establecer el parámetro del Stored Procedure
-                stmt.setInt(1, pagina);
+            conn = ConnectionDB.getConnection();
+            stmt = conn.prepareCall(stored.STORED_PROCEDURE_GET_PAGINAS_LECTURA);
 
-                // Ejecutar el procedimiento almacenado
-                try (ResultSet rs = stmt.executeQuery()) {
-                    // Procesar los resultados
-                    while (rs.next()) {
-                        Pagina page = new Pagina();
-                        page.setUrl_page(rs.getString("url_page"));
-                        page.setUuid_page(rs.getString("PK_UUID_PAGINA"));
-                        page.setUuid_SCRAPING(rs.getString("FK_UUID_CATEGORIA"));
-                        listPage.add(page);
-                    }
-                }
-            } catch (SQLException ex) {
-                Logger.getLogger(DB_ControllerMax.class.getName()).log(Level.SEVERE, null, ex);
+            // Establecer el par�metro del Stored Procedure
+            stmt.setInt(1, pagina);
+
+            // Ejecutar el procedimiento almacenado
+            rs = stmt.executeQuery();
+
+            // Procesar los resultados
+            while (rs.next()) {
+                Pagina page = new Pagina();
+                page.setUrl_page(rs.getString("url_page"));
+                page.setUuid_page(rs.getString("PK_UUID_PAGINA"));
+                page.setUuid_SCRAPING(rs.getString("FK_UUID_CATEGORIA"));
+                listPage.add(page);
             }
 
-        } catch (Exception e) {
-
+        } catch (SQLException ex) {
+            Logger.getLogger(DB_ControllerMax.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+            // Asegurarse de cerrar el ResultSet
+            if (rs != null) {
+                try {
+                    rs.close();
+                } catch (SQLException e) {
+                    Logger.getLogger(DB_ControllerMax.class.getName()).log(Level.SEVERE, "Error al cerrar ResultSet", e);
+                }
+            }
+            // Asegurarse de cerrar el CallableStatement
+            if (stmt != null) {
+                try {
+                    stmt.close();
+                } catch (SQLException e) {
+                    Logger.getLogger(DB_ControllerMax.class.getName()).log(Level.SEVERE, "Error al cerrar CallableStatement", e);
+                }
+            }
+            // Asegurarse de cerrar la conexi�n
+            if (conn != null) {
+                try {
+                    conn.close();
+                } catch (SQLException e) {
+                    Logger.getLogger(DB_ControllerMax.class.getName()).log(Level.SEVERE, "Error al cerrar la conexi�n a la base de datos", e);
+                }
+            }
         }
+
         return listPage;
     }
 
@@ -131,116 +146,132 @@ public class DB_ControllerMax {
             GetDate getDate = new GetDate();
             String _fecha = getDate.getFormatDate();
 
-            conn = ConnectionDB.getConnection(); // Obtener la conexión
+            conn = ConnectionDB.getConnection(); // Obtener la conexi�n
 
             for (Pagina pagina : paginas) {
                 System.out.println("pagina.getUrl_page()> " + pagina.getUrl_page());
                 List<URL_prod> urls_page = peticion.urlDataProduct(pagina.getUrl_page(), div, anchorHTML);
                 for (URL_prod urlProd : urls_page) {
-                    try (CallableStatement stmt = conn.prepareCall(stored.STORED_PROCEDURE_INSERT_URL_FOR_PAGE)) {
+                    CallableStatement stmt = null;
+                    try {
+                        stmt = conn.prepareCall(stored.STORED_PROCEDURE_INSERT_URL_FOR_PAGE);
                         UniversalIdentifaction uuid = new UniversalIdentifaction();
 
-                        // Establecer el parámetro del Stored Procedure
+                        // Establecer el par�metro del Stored Procedure
                         stmt.setString(1, urlProd.getUrl());
                         stmt.setString(2, pagina.getUrl_page());
                         stmt.setString(3, uuid.uuidScrap());
                         stmt.setString(4, pagina.getUuid_page());
                         stmt.setString(5, _fecha);
+
                         // Ejecutar el Stored Procedure
                         stmt.executeUpdate();
-                        System.out.println("Registro insertado correctamente.");
                     } catch (SQLException e) {
-                        // Manejar excepciones SQL específicas
+                        // Manejar excepciones SQL espec�ficas
                         System.err.println("Error al ejecutar el Stored Procedure: " + e.getMessage());
+                    } finally {
+                        // Asegurarse de cerrar el CallableStatement
+                        if (stmt != null) {
+                            try {
+                                stmt.close();
+                            } catch (SQLException e) {
+                                System.err.println("Error al cerrar CallableStatement: " + e.getMessage());
+                            }
+                        }
                     }
                 }
             }
         } catch (SQLException ex) {
-            Logger.getLogger(DB_ControllerMax.class.getName()).log(Level.SEVERE, "Error en la conexión a la base de datos", ex);
+            Logger.getLogger(DB_ControllerMax.class.getName()).log(Level.SEVERE, "Error en la conexi�n a la base de datos", ex);
         } finally {
-            // Asegurarse de cerrar la conexión en el bloque finally
+            // Asegurarse de cerrar la conexi�n en el bloque finally
             if (conn != null) {
                 try {
                     conn.close();
                 } catch (SQLException e) {
-                    Logger.getLogger(DB_ControllerMax.class.getName()).log(Level.SEVERE, "Error al cerrar la conexión a la base de datos", e);
+                    Logger.getLogger(DB_ControllerMax.class.getName()).log(Level.SEVERE, "Error al cerrar la conexi�n a la base de datos", e);
                 }
             }
         }
     }
 
     public void saveProduct(String tipo) {
+        Connection conn = null;
+        CallableStatement stmt = null;
+        ResultSet resultSet = null;
+
         try {
             Stored stored = new Stored();
-            Connection conn = ConnectionDB.getConnection();
+            conn = ConnectionDB.getConnection();
             GetDate getAmerican = new GetDate();
             DB_ControllerMax runRobot = new DB_ControllerMax();
             String date = getAmerican.getFormatDateAmerican();
-            Random random = new Random();
             int status = 0;
-            try (CallableStatement stmt = conn.prepareCall(stored.STORED_PROCEDURE_GET_LOG_LECTURA)) {
-                // Establecer el parámetro del Stored Procedure
-                stmt.setString(1, date);
 
-                // Ejecutar el procedimiento almacenado
-                try (ResultSet resultSet = stmt.executeQuery()) {
-                    // Procesar los resultados
-                    while (resultSet.next()) {
-                        String carga_productos = resultSet.getString("carga_productos");
-                        System.out.println("carga_productos> " + carga_productos);
+            stmt = conn.prepareCall(stored.STORED_PROCEDURE_GET_LOG_LECTURA);
+            stmt.setString(1, date);
+            resultSet = stmt.executeQuery();
 
-                        String UUID_SCRAPING = resultSet.getString("UUID_LOTE_REGISTRADO");
-                        System.out.println("UUID_SCRAPING> " + UUID_SCRAPING);
+            while (resultSet.next()) {
 
-                        String number_urls_prod = resultSet.getString("number_urls_products");
-                        System.out.println("number_urls_prod> " + number_urls_prod);
+                String UUID_SCRAPING = resultSet.getString("UUID_LOTE_REGISTRADO");
 
-                        int paginado_urls = Integer.parseInt(number_urls_prod);
-                        int pagina = 0;
-                        System.out.println("runRobot.getConsultaSegmentadaProd(pagina, UUID_SCRAPING) " + UUID_SCRAPING);
-                        System.out.println("paginado_urls / 100> " + paginado_urls);
-                        if (status == 0) {
-                            try (CallableStatement stmtLog = conn.prepareCall(stored.STORED_PROCEDURE_UPDATE_LOG_CAT_LECTURA_CARGA)) {
-                                stmtLog.setString(1, UUID_SCRAPING);
-                                stmtLog.executeUpdate();
-                                System.out.println("Registro insertado correctamente. "+stored.STORED_PROCEDURE_UPDATE_LOG_CAT_LECTURA_CARGA+"("+UUID_SCRAPING+")");
-                            } catch (SQLException e) {
-                                Logger.getLogger(DB_ControllerMax.class.getName()).log(Level.SEVERE, "Error al ejecutar el Stored Procedure", e);
-                            }
-                        }
-                        status = 1;
+                String number_urls_prod = resultSet.getString("number_urls_products");
 
-                        for (int i = 0; i < (paginado_urls / 100); i++) {
+                int paginado_urls = Integer.parseInt(number_urls_prod);
+                int pagina = 0;
 
-                            System.out.println("pagina> " + pagina);
-                            List<Pagina> listPagina = runRobot.getConsultaSegmentadaProd(pagina, UUID_SCRAPING);
-                            if (tipo.equals("WAY")) {
-                                runRobot.saveProductionWAY(listPagina);
-                            } else {
-                                runRobot.saveProduction(listPagina);
-                            }
-
-                            pagina += 100;
-
-                            // Esperar un intervalo aleatorio entre 2 y 3 segundos
-                            int sleepTime = 2000 + random.nextInt(1000); // Genera un valor entre 2000 y 2999 ms
-                            Thread.sleep(sleepTime);
-                        }
-                        // Imprimir los resultados
-                        System.out.println("carga_productos>> " + carga_productos);
-                        System.out.println("UUID_SCRAPING> " + UUID_SCRAPING);
-
+                if (status == 0) {
+                    try (CallableStatement stmtLog = conn.prepareCall(stored.STORED_PROCEDURE_UPDATE_LOG_CAT_LECTURA_CARGA)) {
+                        stmtLog.setString(1, UUID_SCRAPING);
+                        stmtLog.executeUpdate();
+                        System.out.println("Registro insertado correctamente. " + stmtLog.toString());
+                    } catch (SQLException e) {
+                        Logger.getLogger(DB_ControllerMax.class.getName()).log(Level.SEVERE, "Error al ejecutar el Stored Procedure", e);
                     }
                 }
+                status = 1;
+
+                for (int i = 0; i < (paginado_urls / 100); i++) {
+                    List<Pagina> listPagina = runRobot.getConsultaSegmentadaProd(pagina, UUID_SCRAPING);
+                    if (tipo.equals("WAY")) {
+                        runRobot.saveProductionWAY(listPagina);
+                    } else {
+                        runRobot.saveProductionMAX(listPagina);
+                    }
+                    pagina += 100;
+                }
+
             }
 
         } catch (SQLException ex) {
             Logger.getLogger(DB_ControllerMax.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (InterruptedException ex) {
-            Logger.getLogger(DB_ControllerMax.class.getName()).log(Level.SEVERE, null, ex);
-            Thread.currentThread().interrupt();
+        } finally {
+            // Cerrar ResultSet
+            if (resultSet != null) {
+                try {
+                    resultSet.close();
+                } catch (SQLException e) {
+                    Logger.getLogger(DB_ControllerMax.class.getName()).log(Level.SEVERE, "Error al cerrar ResultSet", e);
+                }
+            }
+            // Cerrar CallableStatement
+            if (stmt != null) {
+                try {
+                    stmt.close();
+                } catch (SQLException e) {
+                    Logger.getLogger(DB_ControllerMax.class.getName()).log(Level.SEVERE, "Error al cerrar CallableStatement", e);
+                }
+            }
+            // Cerrar Connection
+            if (conn != null) {
+                try {
+                    conn.close();
+                } catch (SQLException e) {
+                    Logger.getLogger(DB_ControllerMax.class.getName()).log(Level.SEVERE, "Error al cerrar Connection", e);
+                }
+            }
         }
-
     }
 
     public void saveProductionWAY(List<Pagina> listPagina) {
@@ -267,7 +298,7 @@ public class DB_ControllerMax {
 
                 try {
                     stmt = conn.prepareCall(stored.STORED_PROCEDURE_INSERT_PRODUCTO_READ);
-                    // Establecer el parámetro del Stored Procedure
+                    // Establecer el parametro del Stored Procedure
                     stmt.setString(1, producto.getUrl_img_prod());
                     stmt.setString(2, producto.getUrl_marca());
                     stmt.setString(3, producto.getTag_name());
@@ -285,7 +316,6 @@ public class DB_ControllerMax {
 
                     // Ejecutar el Stored Procedure
                     stmt.executeUpdate();
-                    System.out.println("------------------------------------------------------------------------------------------------");
                     save.saveDescription(UUID_PRODUCTO, producto.getDescriptions());
                     save.saveEspecificacion(UUID_PRODUCTO, producto.getEspecificaciones());
 
@@ -319,36 +349,64 @@ public class DB_ControllerMax {
     public List<Pagina> getConsultaSegmentadaProd(int pagina, String UUID_SCRAPING) {
         System.out.println("UUID_SCRAPING> " + UUID_SCRAPING);
         List<Pagina> listPage = new ArrayList<>();
+        Connection conn = null;
+        CallableStatement stmt = null;
+        ResultSet rs = null;
+
         try {
             Stored stored = new Stored();
-            Connection conn = ConnectionDB.getConnection();
-            try (CallableStatement stmt = conn.prepareCall(stored.STORED_PROCEDURE_GET_URLS_PRODUCTS)) {
-                // Establecer el parámetro del Stored Procedure
-                stmt.setInt(1, pagina);
-                stmt.setString(2, UUID_SCRAPING);
+            conn = ConnectionDB.getConnection();
+            stmt = conn.prepareCall(stored.STORED_PROCEDURE_GET_URLS_PRODUCTS);
 
-                // Ejecutar el procedimiento almacenado
-                try (ResultSet rs = stmt.executeQuery()) {
-                    // Procesar los resultados
-                    while (rs.next()) {
-                        Pagina page = new Pagina();
-                        page.setUrl_page(rs.getString("urls_for_page"));
-                        page.setUuid_page(rs.getString("PK_UUID_FOR_PAGE"));
-                        page.setUuid_SCRAPING(rs.getString("FK_UUID_PAGINA"));
-                        listPage.add(page);
-                    }
-                }
-            } catch (SQLException ex) {
-                Logger.getLogger(DB_ControllerMax.class.getName()).log(Level.SEVERE, null, ex);
+            // Establecer el par�metro del Stored Procedure
+            stmt.setInt(1, pagina);
+            stmt.setString(2, UUID_SCRAPING);
+
+            // Ejecutar el procedimiento almacenado
+            rs = stmt.executeQuery();
+
+            // Procesar los resultados
+            while (rs.next()) {
+                Pagina page = new Pagina();
+                page.setUrl_page(rs.getString("urls_for_page"));
+                page.setUuid_page(rs.getString("PK_UUID_FOR_PAGE"));
+                page.setUuid_SCRAPING(rs.getString("FK_UUID_PAGINA"));
+                listPage.add(page);
             }
-
-        } catch (Exception e) {
-
+        } catch (SQLException ex) {
+            Logger.getLogger(DB_ControllerMax.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+            // Cerrar ResultSet
+            if (rs != null) {
+                try {
+                    rs.close();
+                } catch (SQLException e) {
+                    Logger.getLogger(DB_ControllerMax.class.getName()).log(Level.SEVERE, "Error al cerrar ResultSet", e);
+                }
+            }
+            // Cerrar CallableStatement
+            if (stmt != null) {
+                try {
+                    stmt.close();
+                } catch (SQLException e) {
+                    Logger.getLogger(DB_ControllerMax.class.getName()).log(Level.SEVERE, "Error al cerrar CallableStatement", e);
+                }
+            }
+            // Cerrar Connection
+            if (conn != null) {
+                try {
+                    conn.close();
+                } catch (SQLException e) {
+                    Logger.getLogger(DB_ControllerMax.class.getName()).log(Level.SEVERE, "Error al cerrar Connection", e);
+                }
+            }
         }
+
         return listPage;
     }
 
-    public void saveProduction(List<Pagina> listPagina) {
+    public void saveProductionMAX(List<Pagina> listPagina) {
+        // Crear un pool de 3 hilos
         Stored stored = new Stored();
         GetProductoMax getProd = new GetProductoMax();
         GetDate getDate = new GetDate();
@@ -356,19 +414,20 @@ public class DB_ControllerMax {
         UniversalIdentifaction uuid = new UniversalIdentifaction();
         DB_ControllerMax save = new DB_ControllerMax();
 
-        Connection conn = null;
-        CallableStatement stmt = null;
-
-        try {
-            conn = ConnectionDB.getConnection();
-
-            for (Pagina pagina : listPagina) {
-                Producto producto = getProd.getAllData(pagina.getUrl_page());
-                String UUID_PRODUCTO = uuid.uuidScrap();
-
+        for (Pagina pagina : listPagina) {
+                Connection conn = null;
+                CallableStatement stmt = null;
                 try {
+                    conn = ConnectionDB.getConnection();
+                    String UUID_PRODUCTO = uuid.uuidScrap();
+
+                    Producto producto = getProd.getAllData(pagina.getUrl_page());
+                    if (producto.getTag_name() == null || producto.getTag_name().isEmpty()) {
+                        return;
+                    }
+
                     stmt = conn.prepareCall(stored.STORED_PROCEDURE_INSERT_PRODUCTO_READ);
-                    // Establecer el parámetro del Stored Procedure
+                    // Establecer el parametro del Stored Procedure
                     stmt.setString(1, producto.getUrl_img_prod());
                     stmt.setString(2, producto.getUrl_marca());
                     stmt.setString(3, producto.getTag_name());
@@ -386,10 +445,9 @@ public class DB_ControllerMax {
 
                     // Ejecutar el Stored Procedure
                     stmt.executeUpdate();
-                    System.out.println("Registro insertado correctamente. "+stored.STORED_PROCEDURE_INSERT_PRODUCTO_READ+" >> "+stmt.toString());
+                    System.out.println("Registro insertado correctamente: " + stmt.toString());
                     save.saveDescription(UUID_PRODUCTO, producto.getDescriptions());
                     save.saveEspecificacion(UUID_PRODUCTO, producto.getEspecificaciones());
-
                 } catch (SQLException e) {
                     // Manejar excepciones SQL
                     e.printStackTrace();
@@ -401,19 +459,14 @@ public class DB_ControllerMax {
                             e.printStackTrace();
                         }
                     }
+                    if (conn != null) {
+                        try {
+                            conn.close();
+                        } catch (SQLException e) {
+                            e.printStackTrace();
+                        }
+                    }
                 }
-            }
-
-        } catch (SQLException ex) {
-            Logger.getLogger(DB_ControllerMax.class.getName()).log(Level.SEVERE, null, ex);
-        } finally {
-            if (conn != null) {
-                try {
-                    conn.close();
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                }
-            }
         }
     }
 
@@ -423,26 +476,27 @@ public class DB_ControllerMax {
             return;
         }
 
+        Connection conn = null;
+
         try {
             Stored stored = new Stored();
-            Connection conn = ConnectionDB.getConnection();
+            conn = ConnectionDB.getConnection();
 
             for (int i = 0; i < descriptions.size(); i++) {
                 Descriptions description = descriptions.get(i);
 
                 if (description == null || description.getDescripcion() == null) {
-                    System.out.println("Descripción o elemento en la lista es nulo.");
+                    System.out.println("Descripci�n o elemento en la lista es nulo en el �ndice " + i);
                     continue;
                 }
 
                 try (CallableStatement stmt = conn.prepareCall(stored.STORED_PROCEDURE_INSERT_DESCRIPTION)) {
-                    // Establecer el parámetro del Stored Procedure
+                    // Establecer el par�metro del Stored Procedure
                     stmt.setString(1, description.getDescripcion());
                     stmt.setString(2, uuidProd);
 
                     // Ejecutar el Stored Procedure
                     stmt.executeUpdate();
-                    System.out.println("Registro insertado correctamente.");
 
                 } catch (SQLException e) {
                     // Manejar excepciones SQL
@@ -453,8 +507,14 @@ public class DB_ControllerMax {
         } catch (SQLException ex) {
             Logger.getLogger(DB_ControllerMax.class.getName()).log(Level.SEVERE, null, ex);
         } finally {
-            // Aquí también debes cerrar la conexión si no se está utilizando un pool de conexiones
-            // Connection.close() si `conn` no se cierra automáticamente
+            // Cerrar Connection
+            if (conn != null) {
+                try {
+                    conn.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
         }
     }
 
@@ -475,25 +535,26 @@ public class DB_ControllerMax {
                 Especificaciones especificacion = especificaciones.get(i);
 
                 if (especificacion == null || especificacion.getEspecificacion() == null || especificacion.getDescripcion() == null) {
-                    System.out.println("Especificación o descripción es nula en el índice " + i);
+                    System.out.println("Especificaci�n o Descripci�n es nula en el �ndice " + i);
                     continue;
                 }
 
                 try {
                     stmt = conn.prepareCall(stored.STORED_PROCEDURE_INSERT_ESPECIFICACIONES);
-                    // Establecer el parámetro del Stored Procedure
+                    // Establecer el par�metro del Stored Procedure
                     stmt.setString(1, especificacion.getEspecificacion());
                     stmt.setString(2, especificacion.getDescripcion());
                     stmt.setString(3, uuidProd);
 
                     // Ejecutar el Stored Procedure
                     stmt.executeUpdate();
-                    System.out.println("Registro insertado correctamente. "+stored.STORED_PROCEDURE_INSERT_ESPECIFICACIONES+" >> "+stmt.toString());
+                    System.out.println("Registro insertado correctamente: " + stmt.toString());
 
                 } catch (SQLException e) {
                     // Manejar excepciones SQL
                     e.printStackTrace();
                 } finally {
+                    // Cerrar CallableStatement
                     if (stmt != null) {
                         try {
                             stmt.close();
@@ -507,6 +568,7 @@ public class DB_ControllerMax {
         } catch (SQLException ex) {
             Logger.getLogger(DB_ControllerMax.class.getName()).log(Level.SEVERE, null, ex);
         } finally {
+            // Cerrar Connection
             if (conn != null) {
                 try {
                     conn.close();

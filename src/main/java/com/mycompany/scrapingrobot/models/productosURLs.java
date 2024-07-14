@@ -12,12 +12,14 @@ public class productosURLs {
 
     private String nombreProducto;
     private String urlProducto;
+    private String categoria;
 
     @Override
     public String toString() {
-        return "productosURLs{" + "nombreProducto=" + nombreProducto + ", urlProducto=" + urlProducto + '}';
+        return "productosURLs{" + "nombreProducto=" + nombreProducto + ", urlProducto=" + urlProducto + ", categoria=" + categoria + '}';
     }
 
+    
     public String getNombreProducto() {
         return nombreProducto;
     }
@@ -32,6 +34,14 @@ public class productosURLs {
 
     public void setUrlProducto(String urlProducto) {
         this.urlProducto = urlProducto;
+    }
+
+    public String getCategoria() {
+        return categoria;
+    }
+
+    public void setCategoria(String categoria) {
+        this.categoria = categoria;
     }
 
 }
